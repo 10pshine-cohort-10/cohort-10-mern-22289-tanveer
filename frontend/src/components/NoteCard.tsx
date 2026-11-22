@@ -1,6 +1,11 @@
 import Icon from './Icon.jsx'
+import type { Note } from '../types/note'
 
-function NoteCard({ note }) {
+interface NoteCardProps {
+  note: Note
+}
+
+function NoteCard({ note }: NoteCardProps) {
   return (
     <article className={`note-card note-card-${note.color}`}>
       <div className="note-card-topline">

@@ -1,19 +1,94 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import type { ChangeEvent, FormEvent } from 'react'
 import Icon from './Icon.jsx'
+import type { NoteCategory, NoteDetails } from '../types/note'
 
-const categories = ['Study', 'Projects', 'Meetings', 'Personal']
+const categories: readonly NoteCategory[] = [
+  'Study',
+  'Projects',
+  'Meetings',
+  'Personal',
+]
 
-function CreateNoteModal({ onCancel, onSave }) {
-  const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
-  const [category, setCategory] = useState('Study')
-  const [favorite, setFavorite] = useState(false)
-  const [errors, setErrors] = useState({ title: '', content: '' })
+interface CreateNoteModalProps {
+  onCancel: () => void
+  onSave: (noteDetails: NoteDetails) => void
+}
+
+interface FormErrors {
+  title: string
+  content: string
+}
+
+function isNoteCategory(value: string): value is NoteCategory {
+  return categories.some((category) => category === value)
+}
+
+function CreateNoteModal({ onCancel, onSave }: CreateNoteModalProps) {
+  const [title, setTitle] = useState<string>('')
+  const [content, setContent] = useState<string>('')
+  const [category, setCategory] = useState<NoteCategory>('Study')
+  const [favorite, setFavorite] = useState<boolean>(false)
+  const [errors, setErrors] = useState<FormErrors>({
+    title: '',
+    content: '',
+  })
+  const modalRef = useRef<HTMLElement | null>(null)
+  const titleInputRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => {
-    function handleKeyDown(event) {
+    titleInputRef.current?.focus()
+
+    function handleKeyDown(event: globalThis.KeyboardEvent) {
       if (event.key === 'Escape') {
         onCancel()
+        return
+      }
+
+      if (event.key !== 'Tab') {
+        return
+      }
+
+      const modal = modalRef.current
+      if (!modal) {
+        return
+      }
+
+      const focusableElements = Array.from(
+        modal.querySelectorAll<HTMLElement>(
+          'a[href], button, input, textarea, select, [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter(
+        (element) =>
+          !element.hasAttribute('disabled') &&
+          element.getAttribute('aria-hidden') !== 'true' &&
+          element.tabIndex >= 0,
+      )
+
+      if (focusableElements.length === 0) {
+        event.preventDefault()
+        modal.focus()
+        return
+      }
+
+      const firstElement = focusableElements[0]
+      const lastElement = focusableElements[focusableElements.length - 1]
+      const activeElement = document.activeElement
+
+      if (
+        event.shiftKey &&
+        (activeElement === firstElement ||
+          !modal.contains(activeElement))
+      ) {
+        event.preventDefault()
+        lastElement.focus()
+      } else if (
+        !event.shiftKey &&
+        (activeElement === lastElement ||
+          !modal.contains(activeElement))
+      ) {
+        event.preventDefault()
+        firstElement.focus()
       }
     }
 
@@ -21,7 +96,7 @@ function CreateNoteModal({ onCancel, onSave }) {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [onCancel])
 
-  function handleSubmit(event) {
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
     const nextErrors = {
@@ -48,6 +123,7 @@ function CreateNoteModal({ onCancel, onSave }) {
         aria-labelledby="create-note-title"
         aria-modal="true"
         className="create-note-modal"
+        ref={modalRef}
         role="dialog"
       >
         <div className="create-note-modal-heading">
@@ -77,7 +153,8 @@ function CreateNoteModal({ onCancel, onSave }) {
               aria-required="true"
               autoFocus
               id="note-title"
-              onChange={(event) => {
+              ref={titleInputRef}
+              onChange={(event: ChangeEvent<HTMLInputElement>) => {
                 setTitle(event.target.value)
                 if (errors.title) {
                   setErrors((currentErrors) => ({
@@ -106,7 +183,7 @@ function CreateNoteModal({ onCancel, onSave }) {
               aria-invalid={Boolean(errors.content)}
               aria-required="true"
               id="note-content"
-              onChange={(event) => {
+              onChange={(event: ChangeEvent<HTMLTextAreaElement>) => {
                 setContent(event.target.value)
                 if (errors.content) {
                   setErrors((currentErrors) => ({
@@ -116,7 +193,7 @@ function CreateNoteModal({ onCancel, onSave }) {
                 }
               }}
               placeholder="Write down the details..."
-              rows="5"
+              rows={5}
               value={content}
             />
             {errors.content && (
@@ -134,7 +211,11 @@ function CreateNoteModal({ onCancel, onSave }) {
             <label htmlFor="note-category">Category</label>
             <select
               id="note-category"
-              onChange={(event) => setCategory(event.target.value)}
+              onChange={(event: ChangeEvent<HTMLSelectElement>) => {
+                if (isNoteCategory(event.target.value)) {
+                  setCategory(event.target.value)
+                }
+              }}
               value={category}
             >
               {categories.map((option) => (
@@ -148,7 +229,9 @@ function CreateNoteModal({ onCancel, onSave }) {
           <label className="favorite-checkbox">
             <input
               checked={favorite}
-              onChange={(event) => setFavorite(event.target.checked)}
+              onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                setFavorite(event.target.checked)
+              }
               type="checkbox"
             />
             <span className="favorite-checkbox-mark" aria-hidden="true">

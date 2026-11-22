@@ -601,13 +601,15 @@
     width: min(285px, calc(100vw - 54px));
     transform: translateX(-105%);
     transition: transform 220ms ease;
+    visibility: hidden;
   }
 
   .sidebar.sidebar-open {
     transform: translateX(0);
+    visibility: visible;
   }
 
-  .sidebar-close-button {
+  .sidebar .sidebar-close-button {
     display: grid;
   }
 

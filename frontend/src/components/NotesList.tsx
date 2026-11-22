@@ -1,6 +1,17 @@
-import NoteCard from './NoteCard.jsx'
+import NoteCard from './NoteCard'
+import type { Note, NoteSection } from '../types/note'
 
-function NotesList({ activeSection, notes, searchQuery }) {
+interface NotesListProps {
+  activeSection: NoteSection
+  notes: Note[]
+  searchQuery: string
+}
+
+function NotesList({
+  activeSection,
+  notes,
+  searchQuery,
+}: NotesListProps) {
   const query = searchQuery.trim()
   const sectionTitle = activeSection === 'All Notes' ? 'My Notes' : activeSection
   let sectionDescription = 'Your ideas, plans, and little reminders.'

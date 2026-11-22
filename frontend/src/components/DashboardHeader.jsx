@@ -25,7 +25,7 @@ function DashboardHeader({ onNewNote, onSearchChange, searchQuery }) {
         </label>
         <button
           className="new-note-button"
-          onClick={onNewNote}
+          onClick={(event) => onNewNote(event)}
           type="button"
         >
           <Icon name="plus" />

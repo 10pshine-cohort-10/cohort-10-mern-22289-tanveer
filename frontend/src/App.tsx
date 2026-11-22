@@ -1,12 +1,20 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
+import type { MouseEvent } from 'react'
 import './App.css'
-import CreateNoteModal from './components/CreateNoteModal.jsx'
+import CreateNoteModal from './components/CreateNoteModal'
 import DashboardHeader from './components/DashboardHeader.jsx'
 import Icon from './components/Icon.jsx'
-import NotesList from './components/NotesList.jsx'
-import Sidebar from './components/Sidebar.jsx'
+import NotesList from './components/NotesList'
+import Sidebar from './components/Sidebar'
+import type {
+  Note,
+  NoteCategory,
+  NoteColor,
+  NoteDetails,
+  NoteSection,
+} from './types/note'
 
-const initialNotes = [
+const initialNotes: Note[] = [
   {
     id: 1,
     title: 'React study plan',
@@ -69,7 +77,7 @@ const initialNotes = [
   },
 ]
 
-const categoryColors = {
+const categoryColors: Record<NoteCategory, NoteColor> = {
   Study: 'lavender',
   Projects: 'peach',
   Meetings: 'blue',
@@ -77,11 +85,14 @@ const categoryColors = {
 }
 
 function App() {
-  const [notes, setNotes] = useState(initialNotes)
-  const [activeSection, setActiveSection] = useState('All Notes')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [notes, setNotes] = useState<Note[]>(initialNotes)
+  const [activeSection, setActiveSection] =
+    useState<NoteSection>('All Notes')
+  const [searchQuery, setSearchQuery] = useState<string>('')
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false)
+  const [isCreateModalOpen, setIsCreateModalOpen] =
+    useState<boolean>(false)
+  const createNoteTriggerRef = useRef<HTMLButtonElement | null>(null)
 
   const filteredNotes = useMemo(() => {
     const query = searchQuery.trim().toLowerCase()
@@ -104,12 +115,24 @@ function App() {
     )
   }, [activeSection, notes, searchQuery])
 
-  function handleSectionChange(section) {
+  function handleSectionChange(section: NoteSection) {
     setActiveSection(section)
     setIsSidebarOpen(false)
   }
 
-  function handleCreateNote(noteDetails) {
+  function handleOpenCreateModal(event: MouseEvent<HTMLButtonElement>) {
+    createNoteTriggerRef.current = event.currentTarget
+    setIsCreateModalOpen(true)
+  }
+
+  function closeCreateModal() {
+    setIsCreateModalOpen(false)
+    window.requestAnimationFrame(() => {
+      createNoteTriggerRef.current?.focus()
+    })
+  }
+
+  function handleCreateNote(noteDetails: NoteDetails) {
     setNotes((currentNotes) => {
       const nextId =
         currentNotes.reduce(
@@ -130,7 +153,7 @@ function App() {
         ...currentNotes,
       ]
     })
-    setIsCreateModalOpen(false)
+    closeCreateModal()
   }
 
   return (
@@ -146,6 +169,7 @@ function App() {
       <Sidebar
         activeSection={activeSection}
         isOpen={isSidebarOpen}
+        noteCount={notes.length}
         onClose={() => setIsSidebarOpen(false)}
         onSectionChange={handleSectionChange}
       />
@@ -168,7 +192,7 @@ function App() {
 
         <div className="dashboard-content">
           <DashboardHeader
-            onNewNote={() => setIsCreateModalOpen(true)}
+            onNewNote={handleOpenCreateModal}
             onSearchChange={setSearchQuery}
             searchQuery={searchQuery}
           />
@@ -181,7 +205,7 @@ function App() {
       </main>
       {isCreateModalOpen && (
         <CreateNoteModal
-          onCancel={() => setIsCreateModalOpen(false)}
+          onCancel={closeCreateModal}
           onSave={handleCreateNote}
         />
       )}

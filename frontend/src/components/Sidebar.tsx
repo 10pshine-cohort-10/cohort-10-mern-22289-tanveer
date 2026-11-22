@@ -1,12 +1,30 @@
 import Icon from './Icon.jsx'
+import type { NoteSection } from '../types/note'
 
-const navigationItems = [
+const navigationItems: {
+  label: NoteSection
+  icon: string
+}[] = [
   { label: 'All Notes', icon: 'note' },
   { label: 'Favorites', icon: 'favorite' },
   { label: 'Recently Deleted', icon: 'trash' },
 ]
 
-function Sidebar({ activeSection, isOpen, onClose, onSectionChange }) {
+interface SidebarProps {
+  activeSection: NoteSection
+  isOpen: boolean
+  noteCount: number
+  onClose: () => void
+  onSectionChange: (section: NoteSection) => void
+}
+
+function Sidebar({
+  activeSection,
+  isOpen,
+  noteCount,
+  onClose,
+  onSectionChange,
+}: SidebarProps) {
   return (
     <aside className={`sidebar${isOpen ? ' sidebar-open' : ''}`}>
       <div className="sidebar-heading">
@@ -38,7 +56,9 @@ function Sidebar({ activeSection, isOpen, onClose, onSectionChange }) {
           >
             <Icon name={item.icon} />
             <span>{item.label}</span>
-            {item.label === 'All Notes' && <span className="nav-count">06</span>}
+            {item.label === 'All Notes' && (
+              <span className="nav-count">{noteCount}</span>
+            )}
           </button>
         ))}
       </nav>
